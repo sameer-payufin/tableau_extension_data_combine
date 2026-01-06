@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Combined Data Export</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+      margin: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+      font-size: 18px;
+    }
+    .info {
+      background-color: #e3f2fd;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #1976d2;
+    }
+    .sheet-selector {
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sheet-selector label {
+      min-width: 80px;
+      font-weight: 600;
+      color: #555;
+      font-size: 14px;
+    }
+    .sheet-selector select {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .sheet-selector .remove-btn {
+      padding: 8px 12px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .sheet-selector .remove-btn:hover {
+      background-color: #c82333;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    button {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .btn-primary {
+      background-color: #4CAF50;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #45a049;
+    }
+    .btn-secondary {
+      background-color: #2196F3;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #0b7dda;
+    }
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+    }
+    .status.success {
+      background-color: #d4edda;
+      color: #155724;
+      display: block;
+    }
+    .status.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      display: block;
+    }
+    .status.info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      display: block;
+    }
+    .preview {
+      margin-top: 20px;
+      max-height: 300px;
+      overflow: auto;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f8f9fa;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Combined Data Export</h2>
+    <div class="info">
+      Select multiple sheets to combine. The extension will merge them into a single downloadable table aligned by row position.
+    </div>
+    
+    <div id="sheetSelectors">
+      <!-- Sheet selectors will be added dynamically here -->
+    </div>
+    
+    <div style="margin-top: 10px;">
+      <button class="btn-secondary" id="addSheetBtn" onclick="addSheetSelector()" style="width: 100%; background-color: #6c757d;">+ Add Sheet</button>
+    </div>
+    
+    <div class="button-group">
+      <button class="btn-primary" id="previewBtn" onclick="previewData()">Preview Combined Data</button>
+      <button class="btn-secondary" id="downloadBtn" onclick="downloadData()" disabled>Download as Excel</button>
+    </div>
+    
+    <div style="margin-top: 10px;">
+      <button class="btn-secondary" id="refreshBtn" onclick="refreshWorksheets()" style="width: 100%; background-color: #6c757d;">Refresh Worksheets</button>
+    </div>
+    
+    <div id="status" class="status"></div>
+    
+    <div id="preview" class="preview" style="display: none;"></div>
+  </div>
+
+  <!-- Tableau Extensions API -->
+  <!-- Note: Tableau Desktop may inject this automatically. If not, you need to download the file. -->
+  <!-- Download from: https://github.com/tableau/extensions-api (look in the lib folder) -->
+  <!-- Or install via: npm install @tableau/extensions-api -->
+  <script>
+    // Try to load from local file first (if available)
+    // If that fails, Tableau Desktop should inject it automatically
+    (function() {
+      var script = document.createElement('script');
+      script.src = 'js/tableau-extensions-1.latest.min.js';
+      script.onerror = function() {
+        console.log('Local API file not found. Tableau Desktop should inject the API automatically.');
+        console.log('If you see errors, download the file from: https://github.com/tableau/extensions-api');
+        window.tableauScriptLoadError = true;
+        // Don't set error flag - let extension.js wait for Tableau to inject it
+      };
+      script.onload = function() {
+        console.log('Tableau Extensions API loaded from local file');
+        window.tableauScriptLoaded = true;
+      };
+      document.head.appendChild(script);
+    })();
+  </script>
+  <script src="js/extension.js"></script>
+</body>
+</html>
+

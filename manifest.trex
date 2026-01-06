@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest manifest-version="0.1" xmlns="http://www.tableau.com/xml/extension_manifest">
+  <dashboard-extension id="com.smb.combined-export" extension-version="1.0.0">
+    <default-locale>en_US</default-locale>
+    <name>Combined Data Export</name>
+    <description>Combine data from multiple sheets into a single downloadable table</description>
+    <author name="SMB" email="" organization="SMB" website="https://www.example.com"/>
+    <min-api-version>1.0</min-api-version>
+    <source-location>
+      <url>https://harmonious-cat-038b46.netlify.app/index.html</url>
+    </source-location>
+    <icon></icon>
+    <permissions>
+      <permission>full data</permission>
+    </permissions>
+  </dashboard-extension>
+</manifest>
